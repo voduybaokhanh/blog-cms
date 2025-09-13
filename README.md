@@ -20,7 +20,6 @@ A minimal CMS API built with Go, Gin, and GORM.
 8. Postman Collection
 9. Notes
 10. Author
-11. Vietnamese (Original Content)
 
 ---
 
@@ -162,7 +161,7 @@ How to import:
 
 ✅ Tiến độ (theo tuần)
 
-Week 1: Setup dự án, Auth (Register/Login/Me) (Done
+Week 1: Setup dự án, Auth (Register/Login/Me) (Done)
 
 Week 2: CRUD Users + JWT Middleware + Role-based Access
 
