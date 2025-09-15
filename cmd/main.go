@@ -21,7 +21,7 @@ func main() {
 	config.ConnectDatabase()
 
 	// Auto migrate
-	err := config.DB.AutoMigrate(&models.User{})
+	err := config.DB.AutoMigrate(&models.User{}, &models.Post{}, &models.Category{}, &models.Tag{})
 	if err != nil {
 		log.Fatalf("❌ Migration failed: %v", err)
 	}

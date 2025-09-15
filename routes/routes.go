@@ -25,6 +25,33 @@ func SetupRouter() *gin.Engine {
 			users.PUT("/:id", controllers.UpdateUser)
 			users.DELETE("/:id", controllers.DeleteUser)
 		}
+
+		// Posts (Admin + Editor)
+		posts := api.Group("/posts")
+		posts.Use(middleware.AuthMiddleware())
+		{
+			posts.GET("", controllers.GetPosts)
+			posts.GET("/:id", controllers.GetPost)
+			posts.POST("", middleware.AdminOrEditor(), controllers.CreatePost)
+			posts.PUT("/:id", middleware.AdminOrEditor(), controllers.UpdatePost)
+			posts.DELETE("/:id", middleware.AdminOrEditor(), controllers.DeletePost)
+		}
+
+		// Categories
+		categories := api.Group("/categories")
+		categories.Use(middleware.AuthMiddleware(), middleware.AdminOnly())
+		{
+			categories.GET("", controllers.GetCategories)
+			categories.POST("", controllers.CreateCategory)
+		}
+
+		// Tags
+		tags := api.Group("/tags")
+		tags.Use(middleware.AuthMiddleware(), middleware.AdminOnly())
+		{
+			tags.GET("", controllers.GetTags)
+			tags.POST("", controllers.CreateTag)
+		}
 	}
 
 	return r
