@@ -100,8 +100,9 @@ func Login(c *gin.Context) {
 
 func Me(c *gin.Context) {
 	userID, _ := c.Get("user_id")
+	uid, _ := userID.(uint)
 	var user models.User
-	if err := DB.First(&user, userID).Error; err != nil {
+	if err := DB.First(&user, uid).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}

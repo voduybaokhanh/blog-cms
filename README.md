@@ -1,11 +1,10 @@
-# Mini CMS API (Go: Gin + GORM)
+# Blog CMS API (Go: Gin + GORM)
 
 A minimal CMS API built with Go, Gin, and GORM.
 
-- CRUD for Users and Blogs
+- CRUD for Users, Posts, Categories, Tags
 - JWT Authentication
 - Role-based Access Control
-- Pagination & Search
 - MySQL Database
 
 ## Table of Contents
@@ -25,10 +24,11 @@ A minimal CMS API built with Go, Gin, and GORM.
 
 ## 1) Features
 
-- User and Blog CRUD
+- Users CRUD (admin protected)
+- Posts CRUD (auth required; author/admin protections)
+- Categories & Tags CRUD (admin protected)
 - JWT-based authentication
 - Role-based access control (RBAC)
-- Pagination and search for blogs
 - MySQL database integration
 
 ## 2) Tech Stack
@@ -46,15 +46,15 @@ A minimal CMS API built with Go, Gin, and GORM.
 blog-cms/
 │── cmd/           # Entry point
 │   └── main.go
-│── controllers/   # Controllers (Auth, User, Blog)
-│── middleware/    # JWT middleware
+│── controllers/   # Controllers (Auth, User, Post, Category, Tag)
+│── middleware/    # Auth, roles middleware
 │── models/        # DB models
-│── pkg/           # Shared packages (hash password, utils)
+│── pkg/           # Utilities (hash, jwt)
 │── routes/        # API routes
 │── config/        # DB config, load env
+│── blog-cms.postman_collection.json
 │── go.mod
 │── go.sum
-│── .env           # Environment configuration
 │── README.md
 ```
 
@@ -89,7 +89,7 @@ PORT=3000
    ```
 4. Run the project
    ```bash
-   go run ./cmd
+   go run cmd/main.go
    ```
 
 Server will start at: http://localhost:3000
@@ -100,22 +100,34 @@ Server will start at: http://localhost:3000
 
 - POST `/api/v1/auth/register` — Register
 - POST `/api/v1/auth/login` — Login (returns JWT token)
-- GET `/api/v1/me` — Get current user info (requires Bearer token)
+- GET `/api/v1/me` — Current user (requires Bearer token)
 
-### Users
+### Users (admin only group)
 
-- GET `/api/v1/users` — List users (Admin)
-- GET `/api/v1/users/:id` — User details
-- PUT `/api/v1/users/:id` — Update user
-- DELETE `/api/v1/users/:id` — Delete user
+- GET `/api/v1/users`
+- GET `/api/v1/users/:id`
+- PUT `/api/v1/users/:id`
+- DELETE `/api/v1/users/:id`
 
-### Blogs
+### Posts (auth required group)
 
-- GET `/api/v1/blogs` — List blogs (supports search, page, limit)
-- GET `/api/v1/blogs/:id` — Blog details
-- POST `/api/v1/blogs` — Create a blog (requires login)
-- PUT `/api/v1/blogs/:id` — Update a blog
-- DELETE `/api/v1/blogs/:id` — Delete a blog
+- GET `/api/v1/posts`
+- GET `/api/v1/posts/:id`
+- POST `/api/v1/posts`
+- PUT `/api/v1/posts/:id` (author or admin)
+- DELETE `/api/v1/posts/:id` (author or admin)
+
+### Categories (admin only group)
+
+- GET `/api/v1/categories`
+- POST `/api/v1/categories`
+- DELETE `/api/v1/categories/:id`
+
+### Tags (admin only group)
+
+- GET `/api/v1/tags`
+- POST `/api/v1/tags`
+- DELETE `/api/v1/tags/:id`
 
 ## 7) JWT Usage
 
@@ -134,37 +146,22 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
 
 ## 8) Postman Collection
 
-Postman collection is available at:
+Import the collection file in the project root:
 
-```bash
-/postman/blog-cms.postman_collection.json
+```
+blog-cms.postman_collection.json
 ```
 
-How to import:
-
-1) Open Postman
-2) File → Import
-3) Choose `blog-cms.postman_collection.json`
+Notes:
+- Collection defines `base_url` and stores `token` in collection variables.
+- After login, token is auto-saved; subsequent requests use Bearer auth automatically.
 
 ## 9) Notes
 
 - Default port is `3000` (configurable in `.env`)
 - If MySQL connection fails, verify `.env` and your MySQL user/password
 - JWT token default expiration is 24h
-- AUTO_INCREMENT is not reset when deleting users (keeps ID integrity)
 
 ## 10) Author
 
 - voduybaokhanh
-
----
-
-✅ Tiến độ (theo tuần)
-
-Week 1: Setup dự án, Auth (Register/Login/Me) (Done)
-
-Week 2: CRUD Users + JWT Middleware + Role-based Access
-
-Week 3: CRUD Blogs + Pagination + Search
-
-Week 4: Testing với Postman + Deployment (Docker Compose)

@@ -25,3 +25,17 @@ func CreateTag(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, tag)
 }
+
+func DeleteTag(c *gin.Context) {
+	id := c.Param("id")
+	var tag models.Tag
+	if err := DB.First(&tag, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Tag not found"})
+		return
+	}
+	if err := DB.Delete(&tag).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cannot delete tag"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Tag deleted"})
+}

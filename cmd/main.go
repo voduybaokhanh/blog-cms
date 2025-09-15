@@ -27,7 +27,8 @@ func main() {
 	}
 
 	// Gắn DB vào controllers
-	controllers.SetDB(config.DB)
+	controllers.SetDB(config.DB)     // cho auth.go
+	controllers.SetPostDB(config.DB) // cho post.go
 
 	// Setup router (dùng routes.go, có cả /users)
 	r := routes.SetupRouter()

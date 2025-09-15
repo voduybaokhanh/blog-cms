@@ -25,3 +25,17 @@ func CreateCategory(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, category)
 }
+
+func DeleteCategory(c *gin.Context) {
+	id := c.Param("id")
+	var category models.Category
+	if err := DB.First(&category, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Category not found"})
+		return
+	}
+	if err := DB.Delete(&category).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Cannot delete category"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Category deleted"})
+}

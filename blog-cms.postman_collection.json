@@ -1,72 +1,169 @@
 {
   "info": {
-    "name": "Blog CMS API - Auth Only",
-    "_postman_id": "8c3d2a1f-7b4c-44e2-9c89-abcdef123456",
-    "description": "Collection test API cho Auth (Register, Login, Me)",
+    "name": "Blog CMS API",
+    "_postman_id": "b9d1d6a8-4c56-4c7c-9a83-1234567890ab",
+    "description": "Postman collection for Blog CMS with authentication",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3000" },
+    { "key": "token", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{token}}", "type": "string" }
+    ]
   },
   "item": [
     {
       "name": "Auth - Register",
       "request": {
         "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" }
-        ],
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"name\": \"Admin User\",\n    \"email\": \"admin@example.com\",\n    \"password\": \"123456\"\n}"
+          "raw": "{\n  \"name\": \"admin\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"123456\"\n}"
         },
-        "url": {
-          "raw": "http://localhost:3000/api/v1/auth/register",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "3000",
-          "path": ["api", "v1", "auth", "register"]
-        }
+        "url": "{{base_url}}/api/v1/auth/register"
       }
     },
     {
       "name": "Auth - Login",
       "request": {
         "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" }
-        ],
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
         "body": {
           "mode": "raw",
-          "raw": "{\n    \"email\": \"admin@example.com\",\n    \"password\": \"123456\"\n}"
+          "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"123456\"\n}"
         },
-        "url": {
-          "raw": "http://localhost:3000/api/v1/auth/login",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "3000",
-          "path": ["api", "v1", "auth", "login"]
+        "url": "{{base_url}}/api/v1/auth/login"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "let json = pm.response.json();",
+              "if (json && json.token) {",
+              "  pm.collectionVariables.set('token', json.token);",
+              "} else {",
+              "  pm.collectionVariables.unset('token');",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
         }
-      }
+      ]
     },
     {
       "name": "Auth - Me",
       "request": {
         "method": "GET",
-        "header": [
-          { "key": "Authorization", "value": "Bearer {{token}}" }
-        ],
-        "url": {
-          "raw": "http://localhost:3000/api/v1/me",
-          "protocol": "http",
-          "host": ["localhost"],
-          "port": "3000",
-          "path": ["api", "v1", "me"]
-        }
+        "url": "{{base_url}}/api/v1/me"
       }
-    }
-  ],
-  "variable": [
+    },
     {
-      "key": "token",
-      "value": ""
+      "name": "Users - Get All (admin only)",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/users"
+      }
+    },
+    {
+      "name": "Posts - Create",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Accept", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"First Post\",\n  \"content\": \"This is the content\",\n  \"category_id\": 1,\n  \"tag_ids\": [1, 2]\n}"
+        },
+        "url": "{{base_url}}/api/v1/posts"
+      }
+    },
+    {
+      "name": "Posts - Get All",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/posts"
+      }
+    },
+    {
+      "name": "Posts - Get One",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/v1/posts/1"
+      }
+    },
+    {
+      "name": "Posts - Update",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Accept", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Updated Post\",\n  \"content\": \"New content\",\n  \"tag_ids\": [3]\n}"
+        },
+        "url": "{{base_url}}/api/v1/posts/1"
+      }
+    },
+    {
+      "name": "Posts - Delete",
+      "request": {
+        "method": "DELETE",
+        "url": "{{base_url}}/api/v1/posts/1"
+      }
+    },
+    {
+      "name": "Categories - Create (admin only)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Accept", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Tech\"\n}"
+        },
+        "url": "{{base_url}}/api/v1/categories"
+      }
+    },
+    {
+      "name": "Categories - Delete (admin only)",
+      "request": {
+        "method": "DELETE",
+        "url": "{{base_url}}/api/v1/categories/1"
+      }
+    },
+    {
+      "name": "Tags - Create (admin only)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Accept", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Golang\"\n}"
+        },
+        "url": "{{base_url}}/api/v1/tags"
+      }
+    },
+    {
+      "name": "Tags - Delete (admin only)",
+      "request": {
+        "method": "DELETE",
+        "url": "{{base_url}}/api/v1/tags/1"
+      }
     }
   ]
 }

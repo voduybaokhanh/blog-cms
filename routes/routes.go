@@ -26,15 +26,15 @@ func SetupRouter() *gin.Engine {
 			users.DELETE("/:id", controllers.DeleteUser)
 		}
 
-		// Posts (Admin + Editor)
+		// Posts
 		posts := api.Group("/posts")
 		posts.Use(middleware.AuthMiddleware())
 		{
 			posts.GET("", controllers.GetPosts)
 			posts.GET("/:id", controllers.GetPost)
-			posts.POST("", middleware.AdminOrEditor(), controllers.CreatePost)
-			posts.PUT("/:id", middleware.AdminOrEditor(), controllers.UpdatePost)
-			posts.DELETE("/:id", middleware.AdminOrEditor(), controllers.DeletePost)
+			posts.POST("", controllers.CreatePost)
+			posts.PUT("/:id", controllers.UpdatePost) // chỉ admin hoặc chính author
+			posts.DELETE("/:id", controllers.DeletePost)
 		}
 
 		// Categories
@@ -43,6 +43,7 @@ func SetupRouter() *gin.Engine {
 		{
 			categories.GET("", controllers.GetCategories)
 			categories.POST("", controllers.CreateCategory)
+			categories.DELETE(":id", controllers.DeleteCategory)
 		}
 
 		// Tags
@@ -51,6 +52,7 @@ func SetupRouter() *gin.Engine {
 		{
 			tags.GET("", controllers.GetTags)
 			tags.POST("", controllers.CreateTag)
+			tags.DELETE(":id", controllers.DeleteTag)
 		}
 	}
 
