@@ -6,13 +6,26 @@ import (
 	"github.com/voduybaokhanh/blog-cms/middleware"
 )
 
-func SetupRouter(r *gin.Engine) {
+func SetupRouter() *gin.Engine {
+	r := gin.Default()
+
 	api := r.Group("/api/v1")
+	{
+		// Auth
+		api.POST("/auth/register", controllers.Register)
+		api.POST("/auth/login", controllers.Login)
+		api.GET("/me", middleware.AuthMiddleware(), controllers.Me)
 
-	// Auth
-	api.POST("/auth/register", controllers.Register)
-	api.POST("/auth/login", controllers.Login)
+		// Users (chỉ admin mới có full CRUD)
+		users := api.Group("/users")
+		users.Use(middleware.AuthMiddleware(), middleware.AdminOnly())
+		{
+			users.GET("", controllers.GetUsers)
+			users.GET("/:id", controllers.GetUser)
+			users.PUT("/:id", controllers.UpdateUser)
+			users.DELETE("/:id", controllers.DeleteUser)
+		}
+	}
 
-	// Protected
-	api.GET("/me", middleware.AuthMiddleware(), controllers.Me)
+	return r
 }

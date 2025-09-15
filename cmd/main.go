@@ -4,13 +4,19 @@ import (
 	"log"
 	"os"
 
-	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"github.com/voduybaokhanh/blog-cms/config"
 	"github.com/voduybaokhanh/blog-cms/controllers"
 	"github.com/voduybaokhanh/blog-cms/models"
+	"github.com/voduybaokhanh/blog-cms/routes"
 )
 
 func main() {
+	// Load env
+	if err := godotenv.Load(); err != nil {
+		log.Println("⚠️  No .env file found, using system env")
+	}
+
 	// Kết nối DB
 	config.ConnectDatabase()
 
@@ -23,20 +29,14 @@ func main() {
 	// Gắn DB vào controllers
 	controllers.SetDB(config.DB)
 
-	r := gin.Default()
+	// Setup router (dùng routes.go, có cả /users)
+	r := routes.SetupRouter()
 
-	api := r.Group("/api/v1")
-	{
-		api.POST("/auth/register", controllers.Register)
-		api.POST("/auth/login", controllers.Login)
-		api.GET("/me", controllers.Me)
-	}
-
+	// Run
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "3000"
 	}
-
 	log.Printf("🚀 Server running at http://localhost:%s", port)
 	r.Run(":" + port)
 }
