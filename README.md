@@ -162,6 +162,18 @@ Notes:
 - If MySQL connection fails, verify `.env` and your MySQL user/password
 - JWT token default expiration is 24h
 
+---
+
+✅ Tiến độ (theo tuần)
+
+Week 1: Setup dự án, Auth (Register/Login/Me) (Done)
+
+Week 2: CRUD Users + JWT Middleware + Role-based Access
+
+Week 3: CRUD Blogs + Pagination + Search
+
+Week 4: Testing với Postman + Deployment (Docker Compose)
+
 ## 10) Author
 
 - voduybaokhanh
