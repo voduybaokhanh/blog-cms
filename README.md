@@ -1,179 +1,280 @@
-# Blog CMS API (Go: Gin + GORM)
+# 🚀 Blog CMS API
 
-A minimal CMS API built with Go, Gin, and GORM.
+<div align="center">
 
-- CRUD for Users, Posts, Categories, Tags
-- JWT Authentication
-- Role-based Access Control
-- MySQL Database
+![Go](https://img.shields.io/badge/Go-1.20+-00ADD8?style=for-the-badge&logo=go&logoColor=white)
+![Gin](https://img.shields.io/badge/Gin-Web%20Framework-00ADD8?style=for-the-badge&logo=go&logoColor=white)
+![GORM](https://img.shields.io/badge/GORM-ORM-00ADD8?style=for-the-badge&logo=go&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-Database-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-Authentication-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)
 
-## Table of Contents
+*A modern, minimal CMS API built with Go, Gin, and GORM*
 
-1. Features
-2. Tech Stack
-3. Project Structure
-4. Configuration (.env)
-5. Installation & Run
-6. API Endpoints
-7. JWT Usage
-8. Postman Collection
-9. Notes
-10. Author
+[Features](#-features) • [Tech Stack](#-tech-stack) • [Installation](#-installation) • [API Documentation](#-api-documentation) • [Usage](#-usage)
+
+</div>
 
 ---
 
-## 1) Features
+## ✨ Features
 
-- Users CRUD (admin protected)
-- Posts CRUD (auth required; author/admin protections)
-- Categories & Tags CRUD (admin protected)
-- JWT-based authentication
-- Role-based access control (RBAC)
-- MySQL database integration
+### 🔐 Authentication & Authorization
+- **JWT-based authentication** with secure token management
+- **Role-based access control (RBAC)** for fine-grained permissions
+- **Protected routes** with middleware validation
 
-## 2) Tech Stack
+### 📝 Content Management
+- **Users CRUD** (admin protected)
+- **Posts CRUD** with author/admin protection
+- **Categories & Tags CRUD** (admin protected)
+- **Advanced search** across title and content
+- **Smart filtering** by categories and tags
 
-- Go >= 1.20 — https://go.dev/
-- Gin (Web Framework) — https://github.com/gin-gonic/gin
-- GORM (ORM) — https://gorm.io/
-- MySQL (Database) — https://www.mysql.com/
-- golang-jwt (JWT) — https://github.com/golang-jwt/jwt
-- Postman (API testing) — https://www.postman.com/
+### 🔍 Advanced Querying
+- **Pagination** for efficient data loading
+- **Search functionality** with full-text capabilities
+- **Multi-tag filtering** support
+- **Category-based filtering**
 
-## 3) Project Structure
+### 🗄️ Database
+- **MySQL integration** with GORM ORM
+- **Optimized queries** for better performance
+- **Relationship management** between entities
 
-```text
+---
+
+## 🛠️ Tech Stack
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| [**Go**](https://go.dev/) | ≥ 1.20 | Programming language |
+| [**Gin**](https://github.com/gin-gonic/gin) | Latest | Web framework |
+| [**GORM**](https://gorm.io/) | Latest | ORM library |
+| [**MySQL**](https://www.mysql.com/) | 8.0+ | Database |
+| [**golang-jwt**](https://github.com/golang-jwt/jwt) | Latest | JWT authentication |
+| [**Postman**](https://www.postman.com/) | Latest | API testing |
+
+---
+
+## 📁 Project Structure
+
+```
 blog-cms/
-│── cmd/           # Entry point
+├── 📁 cmd/                    # Application entry point
 │   └── main.go
-│── controllers/   # Controllers (Auth, User, Post, Category, Tag)
-│── middleware/    # Auth, roles middleware
-│── models/        # DB models
-│── pkg/           # Utilities (hash, jwt)
-│── routes/        # API routes
-│── config/        # DB config, load env
-│── blog-cms.postman_collection.json
-│── go.mod
-│── go.sum
-│── README.md
+├── 📁 controllers/            # HTTP handlers
+│   ├── auth.go
+│   ├── user.go
+│   └── post.go
+├── 📁 middleware/             # Custom middleware
+│   ├── auth.go
+│   └── roles.go
+├── 📁 models/                 # Database models
+│   ├── user.go
+│   ├── post.go
+│   ├── category.go
+│   └── tag.go
+├── 📁 pkg/                    # Utility packages
+│   ├── hash/
+│   └── jwt/
+├── 📁 routes/                 # API route definitions
+├── 📁 config/                 # Configuration management
+├── 📄 blog-cms.postman_collection.json
+├── 📄 go.mod
+├── 📄 go.sum
+└── 📄 README.md
 ```
 
-## 4) Configuration (.env)
+---
 
-Create a `.env` file in the project root:
+## ⚙️ Configuration
+
+Create a `.env` file in the root directory:
 
 ```env
+# Database Configuration
 DB_USER=root
 DB_PASSWORD=yourpassword
 DB_HOST=localhost
 DB_PORT=3306
 DB_NAME=blogcms
+
+# JWT Configuration
 JWT_SECRET=supersecretkey
+
+# Server Configuration
 PORT=3000
 ```
 
-## 5) Installation & Run
+---
 
-1. Clone project
-   ```bash
-   git clone https://github.com/voduybaokhanh/blog-cms.git
-   cd blog-cms
-   ```
-2. Install dependencies
-   ```bash
-   go mod tidy
-   ```
-3. Create MySQL database
-   ```sql
-   CREATE DATABASE blogcms;
-   ```
-4. Run the project
-   ```bash
-   go run cmd/main.go
-   ```
+## 🚀 Installation & Setup
 
-Server will start at: http://localhost:3000
+### Prerequisites
+- Go 1.20 or higher
+- MySQL 8.0 or higher
+- Git
 
-## 6) API Endpoints
-
-### Auth
-
-- POST `/api/v1/auth/register` — Register
-- POST `/api/v1/auth/login` — Login (returns JWT token)
-- GET `/api/v1/me` — Current user (requires Bearer token)
-
-### Users (admin only group)
-
-- GET `/api/v1/users`
-- GET `/api/v1/users/:id`
-- PUT `/api/v1/users/:id`
-- DELETE `/api/v1/users/:id`
-
-### Posts (auth required group)
-
-- GET `/api/v1/posts`
-- GET `/api/v1/posts/:id`
-- POST `/api/v1/posts`
-- PUT `/api/v1/posts/:id` (author or admin)
-- DELETE `/api/v1/posts/:id` (author or admin)
-
-### Categories (admin only group)
-
-- GET `/api/v1/categories`
-- POST `/api/v1/categories`
-- DELETE `/api/v1/categories/:id`
-
-### Tags (admin only group)
-
-- GET `/api/v1/tags`
-- POST `/api/v1/tags`
-- DELETE `/api/v1/tags/:id`
-
-## 7) JWT Usage
-
-Obtain a token via `POST /api/v1/auth/login`, then include it in subsequent requests:
-
-```http
-Authorization: Bearer <token>
+### Step 1: Clone the Repository
+```bash
+git clone https://github.com/voduybaokhanh/blog-cms.git
+cd blog-cms
 ```
 
-Example:
-
-```http
-GET /api/v1/me
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6...
+### Step 2: Install Dependencies
+```bash
+go mod tidy
 ```
 
-## 8) Postman Collection
-
-Import the collection file in the project root:
-
-```
-blog-cms.postman_collection.json
+### Step 3: Database Setup
+```sql
+CREATE DATABASE blogcms;
 ```
 
-Notes:
-- Collection defines `base_url` and stores `token` in collection variables.
-- After login, token is auto-saved; subsequent requests use Bearer auth automatically.
+### Step 4: Configure Environment
+```bash
+# Copy the example environment file
+cp .env.example .env
 
-## 9) Notes
+# Edit the .env file with your database credentials
+```
 
-- Default port is `3000` (configurable in `.env`)
-- If MySQL connection fails, verify `.env` and your MySQL user/password
-- JWT token default expiration is 24h
+### Step 5: Run the Application
+```bash
+go run cmd/main.go
+```
+
+🎉 **Server will be running at:** `http://localhost:3000`
 
 ---
 
-✅ Tiến độ (theo tuần)
+## 📚 API Documentation
 
-Week 1: Setup dự án, Auth (Register/Login/Me) (Done)
+### 🔐 Authentication Endpoints
 
-Week 2: CRUD Users + JWT Middleware + Role-based Access
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| `POST` | `/api/v1/auth/register` | Register new user | ❌ |
+| `POST` | `/api/v1/auth/login` | Login user | ❌ |
+| `GET` | `/api/v1/me` | Get current user | ✅ |
 
-Week 3: CRUD Blogs + Pagination + Search
+### 👥 User Management (Admin Only)
 
-Week 4: Testing với Postman + Deployment (Docker Compose)
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| `GET` | `/api/v1/users` | List all users | ✅ Admin |
+| `GET` | `/api/v1/users/:id` | Get user by ID | ✅ Admin |
+| `PUT` | `/api/v1/users/:id` | Update user | ✅ Admin |
+| `DELETE` | `/api/v1/users/:id` | Delete user | ✅ Admin |
 
-## 10) Author
+### 📝 Post Management
 
-- voduybaokhanh
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| `GET` | `/api/v1/posts` | List posts (with pagination & filters) | ✅ |
+| `GET` | `/api/v1/posts/:id` | Get single post | ✅ |
+| `POST` | `/api/v1/posts` | Create new post | ✅ |
+| `PUT` | `/api/v1/posts/:id` | Update post | ✅ Author/Admin |
+| `DELETE` | `/api/v1/posts/:id` | Delete post | ✅ Author/Admin |
+
+### 🏷️ Category Management (Admin Only)
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| `GET` | `/api/v1/categories` | List all categories | ✅ Admin |
+| `POST` | `/api/v1/categories` | Create category | ✅ Admin |
+| `DELETE` | `/api/v1/categories/:id` | Delete category | ✅ Admin |
+
+### 🏷️ Tag Management (Admin Only)
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| `GET` | `/api/v1/tags` | List all tags | ✅ Admin |
+| `POST` | `/api/v1/tags` | Create tag | ✅ Admin |
+| `DELETE` | `/api/v1/tags/:id` | Delete tag | ✅ Admin |
+
+### 🔍 Query Parameters for Posts
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `page` | integer | 1 | Page number for pagination |
+| `limit` | integer | 10 | Number of posts per page |
+| `search` | string | - | Search in title and content |
+| `category` | integer | - | Filter by category ID |
+| `tag` | string | - | Filter by tag IDs (comma-separated) |
+
+### 📋 Example Requests
+
+```bash
+# Pagination
+GET /api/v1/posts?page=1&limit=5
+
+# Search
+GET /api/v1/posts?search=golang
+
+# Filter by category
+GET /api/v1/posts?category=2
+
+# Filter by multiple tags
+GET /api/v1/posts?tag=1,2
+
+# Combined filters
+GET /api/v1/posts?search=api&category=1&tag=3,4&page=2&limit=10
+```
+
+---
+
+## 🔑 JWT Usage
+
+### Authorization Header
+```http
+Authorization: Bearer <your-jwt-token>
+```
+
+### Example Request
+```bash
+curl -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6..." \
+     http://localhost:3000/api/v1/me
+```
+
+---
+
+## 🧪 Testing with Postman
+
+1. **Import Collection**: Import `blog-cms.postman_collection.json`
+2. **Set Variables**: Configure `base_url` and `token` variables
+3. **Auto-token**: Login endpoint automatically saves token for subsequent requests
+
+---
+
+## 📝 Important Notes
+
+- **Default Port**: 3000 (configurable in `.env`)
+- **JWT Expiry**: 24 hours (configurable)
+- **Database**: Ensure MySQL connection is properly configured
+- **Environment**: Check `.env` file if database connection fails
+
+---
+
+## 📊 Development Progress
+
+- ✅ **Week 1**: Project setup, Authentication (Register/Login/Me)
+- ✅ **Week 2**: User CRUD, JWT Middleware, RBAC implementation
+- ✅ **Week 3**: Post CRUD, Pagination, Search, Post-Tags relationships
+- 🔜 **Week 4**: Postman testing, Docker Compose deployment
+
+---
+
+## 👨‍💻 Author
+
+**voduybaokhanh**
+
+---
+
+<div align="center">
+
+**⭐ Star this repository if you found it helpful!**
+
+Made with ❤️ using Go
+
+</div>

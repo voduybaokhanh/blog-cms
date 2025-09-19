@@ -2,180 +2,182 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/voduybaokhanh/blog-cms/config"
 	"github.com/voduybaokhanh/blog-cms/models"
-	"gorm.io/gorm"
 )
 
-func SetPostDB(db *gorm.DB) {
-	DB = db
-}
-
-// ------------------ CREATE ------------------
+// ======================= CREATE POST =======================
 func CreatePost(c *gin.Context) {
-	var input struct {
+	var req struct {
 		Title      string `json:"title" binding:"required"`
 		Content    string `json:"content" binding:"required"`
+		AuthorID   uint   `json:"author_id" binding:"required"`
 		CategoryID uint   `json:"category_id"`
 		TagIDs     []uint `json:"tag_ids"`
 	}
 
-	if err := c.ShouldBindJSON(&input); err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	userID, _ := c.Get("user_id")
-
-	// lấy tags từ DB
-	var tags []models.Tag
-	if len(input.TagIDs) > 0 {
-		DB.Where("id IN ?", input.TagIDs).Find(&tags)
-	}
-
-	var authorID uint
-	switch v := userID.(type) {
-	case uint:
-		authorID = v
-	case float64:
-		authorID = uint(v)
-	default:
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
 
 	post := models.Post{
-		Title:      input.Title,
-		Content:    input.Content,
-		AuthorID:   authorID,
-		CategoryID: input.CategoryID,
-		Tags:       tags,
+		Title:      req.Title,
+		Content:    req.Content,
+		AuthorID:   req.AuthorID,
+		CategoryID: req.CategoryID,
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
 	}
 
-	if err := DB.Create(&post).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	if len(req.TagIDs) > 0 {
+		var tags []models.Tag
+		if err := config.DB.Find(&tags, req.TagIDs).Error; err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid tags"})
+			return
+		}
+		post.Tags = tags
+	}
+
+	if err := config.DB.Create(&post).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create post"})
 		return
 	}
 
-	DB.Preload("Author").Preload("Category").Preload("Tags").First(&post, post.ID)
-	c.JSON(http.StatusOK, models.MapPostToResponse(post))
+	c.JSON(http.StatusCreated, models.MapPostToResponse(post))
 }
 
-// ------------------ READ (ALL) ------------------
-func GetPosts(c *gin.Context) {
-	var posts []models.Post
-	DB.Preload("Author").Preload("Category").Preload("Tags").Find(&posts)
-
-	responses := make([]models.PostResponse, len(posts))
-	for i, p := range posts {
-		responses[i] = models.MapPostToResponse(p)
-	}
-
-	c.JSON(http.StatusOK, responses)
-}
-
-// ------------------ READ (ONE) ------------------
+// ======================= GET ONE POST =======================
 func GetPost(c *gin.Context) {
 	id := c.Param("id")
 	var post models.Post
-	if err := DB.Preload("Author").Preload("Category").Preload("Tags").First(&post, id).Error; err != nil {
+
+	if err := config.DB.Preload("Author").
+		Preload("Category").
+		Preload("Tags").
+		First(&post, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
 		return
 	}
+
 	c.JSON(http.StatusOK, models.MapPostToResponse(post))
 }
 
-// ------------------ UPDATE ------------------
-func UpdatePost(c *gin.Context) {
-	id := c.Param("id")
-	var post models.Post
-	if err := DB.Preload("Tags").First(&post, id).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
+// ======================= GET ALL POSTS =======================
+func GetPosts(c *gin.Context) {
+	// query params
+	pageStr := c.DefaultQuery("page", "1")
+	limitStr := c.DefaultQuery("limit", "10")
+	search := c.Query("search")
+	category := c.Query("category")
+	tags := c.Query("tag") // ví dụ ?tag=1,2
+
+	page, _ := strconv.Atoi(pageStr)
+	limit, _ := strconv.Atoi(limitStr)
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 10
+	}
+
+	var posts []models.Post
+	query := config.DB.Preload("Author").Preload("Category").Preload("Tags")
+
+	if search != "" {
+		query = query.Where("title LIKE ? OR content LIKE ?", "%"+search+"%", "%"+search+"%")
+	}
+
+	if category != "" {
+		query = query.Where("category_id = ?", category)
+	}
+
+	if tags != "" {
+		tagIDs := strings.Split(tags, ",")
+		query = query.Joins("JOIN post_tags ON post_tags.post_id = posts.id").
+			Where("post_tags.tag_id IN ?", tagIDs).
+			Group("posts.id")
+	}
+
+	// đếm total
+	var total int64
+	query.Model(&models.Post{}).Count(&total)
+
+	// lấy data + phân trang
+	offset := (page - 1) * limit
+	if err := query.Limit(limit).Offset(offset).Find(&posts).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch posts"})
 		return
 	}
 
-	userID, _ := c.Get("user_id")
-	role, _ := c.Get("role")
-
-	// chỉ admin hoặc chính author mới được sửa
-	if role != "admin" {
-		var uid uint
-		switch v := userID.(type) {
-		case uint:
-			uid = v
-		case float64:
-			uid = uint(v)
-		default:
-			c.JSON(http.StatusForbidden, gin.H{"error": "Not allowed"})
-			return
-		}
-		if uid != post.AuthorID {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Not allowed"})
-			return
-		}
+	// map sang response DTO
+	var resp []models.PostResponse
+	for _, p := range posts {
+		resp = append(resp, models.MapPostToResponse(p))
 	}
 
-	var input struct {
-		Title   string `json:"title"`
-		Content string `json:"content"`
-		TagIDs  []uint `json:"tag_ids"`
+	// trả về data + meta pagination
+	c.JSON(http.StatusOK, gin.H{
+		"data":  resp,
+		"page":  page,
+		"limit": limit,
+		"total": total,
+	})
+}
+
+// ======================= UPDATE POST =======================
+func UpdatePost(c *gin.Context) {
+	id := c.Param("id")
+	var req struct {
+		Title      string `json:"title"`
+		Content    string `json:"content"`
+		CategoryID uint   `json:"category_id"`
+		TagIDs     []uint `json:"tag_ids"`
 	}
-	if err := c.ShouldBindJSON(&input); err != nil {
+
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if input.Title != "" {
-		post.Title = input.Title
-	}
-	if input.Content != "" {
-		post.Content = input.Content
-	}
-
-	// update tags nếu có
-	if input.TagIDs != nil {
-		var tags []models.Tag
-		DB.Where("id IN ?", input.TagIDs).Find(&tags)
-		post.Tags = tags
-	}
-
-	DB.Save(&post)
-	DB.Preload("Author").Preload("Category").Preload("Tags").First(&post, post.ID)
-
-	c.JSON(http.StatusOK, models.MapPostToResponse(post))
-}
-
-// ------------------ DELETE ------------------
-func DeletePost(c *gin.Context) {
-	id := c.Param("id")
 	var post models.Post
-	if err := DB.First(&post, id).Error; err != nil {
+	if err := config.DB.Preload("Tags").First(&post, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Post not found"})
 		return
 	}
 
-	userID, _ := c.Get("user_id")
-	role, _ := c.Get("role")
+	post.Title = req.Title
+	post.Content = req.Content
+	post.CategoryID = req.CategoryID
+	post.UpdatedAt = time.Now()
 
-	// chỉ admin hoặc chính author mới được xoá
-	if role != "admin" {
-		var uid uint
-		switch v := userID.(type) {
-		case uint:
-			uid = v
-		case float64:
-			uid = uint(v)
-		default:
-			c.JSON(http.StatusForbidden, gin.H{"error": "Not allowed"})
-			return
-		}
-		if uid != post.AuthorID {
-			c.JSON(http.StatusForbidden, gin.H{"error": "Not allowed"})
-			return
+	if len(req.TagIDs) > 0 {
+		var tags []models.Tag
+		if err := config.DB.Find(&tags, req.TagIDs).Error; err == nil {
+			config.DB.Model(&post).Association("Tags").Replace(&tags)
 		}
 	}
 
-	DB.Delete(&post)
+	if err := config.DB.Save(&post).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update post"})
+		return
+	}
+
+	c.JSON(http.StatusOK, models.MapPostToResponse(post))
+}
+
+// ======================= DELETE POST =======================
+func DeletePost(c *gin.Context) {
+	id := c.Param("id")
+	if err := config.DB.Delete(&models.Post{}, id).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete post"})
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{"message": "Post deleted"})
 }

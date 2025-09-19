@@ -1,13 +1,46 @@
 {
   "info": {
-    "name": "Blog CMS API",
-    "_postman_id": "b9d1d6a8-4c56-4c7c-9a83-1234567890ab",
-    "description": "Postman collection for Blog CMS with authentication",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "name": "🚀 Blog CMS API",
+    "_postman_id": "f2f5d5f1-1234-5678-90ab-abcdefabcdef",
+    "description": "Complete Postman collection for Blog CMS API with JWT authentication, CRUD operations, pagination, search, and filtering capabilities",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": {
+      "major": 2,
+      "minor": 0,
+      "patch": 0
+    }
   },
   "variable": [
-    { "key": "base_url", "value": "http://localhost:3000" },
-    { "key": "token", "value": "" }
+    { 
+      "key": "base_url", 
+      "value": "http://localhost:3000",
+      "description": "Base URL for the API server"
+    },
+    { 
+      "key": "token", 
+      "value": "",
+      "description": "JWT authentication token"
+    },
+    { 
+      "key": "user_id", 
+      "value": "1",
+      "description": "Current user ID for testing"
+    },
+    { 
+      "key": "post_id", 
+      "value": "1",
+      "description": "Post ID for testing"
+    },
+    { 
+      "key": "category_id", 
+      "value": "1",
+      "description": "Category ID for testing"
+    },
+    { 
+      "key": "tag_id", 
+      "value": "1",
+      "description": "Tag ID for testing"
+    }
   ],
   "auth": {
     "type": "bearer",
@@ -17,152 +50,656 @@
   },
   "item": [
     {
-      "name": "Auth - Register",
-      "request": {
-        "method": "POST",
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"name\": \"admin\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"123456\"\n}"
-        },
-        "url": "{{base_url}}/api/v1/auth/register"
-      }
-    },
-    {
-      "name": "Auth - Login",
-      "request": {
-        "method": "POST",
-        "header": [{ "key": "Content-Type", "value": "application/json" }],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"123456\"\n}"
-        },
-        "url": "{{base_url}}/api/v1/auth/login"
-      },
-      "event": [
+      "name": "🔐 Authentication",
+      "description": "User authentication endpoints for registration, login, and profile management",
+      "item": [
         {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "let json = pm.response.json();",
-              "if (json && json.token) {",
-              "  pm.collectionVariables.set('token', json.token);",
-              "} else {",
-              "  pm.collectionVariables.unset('token');",
-              "}"
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
             ],
-            "type": "text/javascript"
-          }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"securepassword123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/v1/auth/register",
+            "description": "Register a new user account"
+          },
+          "response": []
+        },
+        {
+          "name": "Login User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"securepassword123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/v1/auth/login",
+            "description": "Login user and get JWT token"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const response = pm.response.json();",
+                  "  if (response && response.token) {",
+                  "    pm.collectionVariables.set('token', response.token);",
+                  "    pm.collectionVariables.set('user_id', response.user.id);",
+                  "    console.log('Token saved:', response.token);",
+                  "  }",
+                  "} else {",
+                  "  pm.collectionVariables.unset('token');",
+                  "  console.log('Login failed, token cleared');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/v1/me",
+            "description": "Get current authenticated user profile"
+          },
+          "response": []
         }
       ]
     },
     {
-      "name": "Auth - Me",
-      "request": {
-        "method": "GET",
-        "url": "{{base_url}}/api/v1/me"
-      }
-    },
-    {
-      "name": "Users - Get All (admin only)",
-      "request": {
-        "method": "GET",
-        "url": "{{base_url}}/api/v1/users"
-      }
-    },
-    {
-      "name": "Posts - Create",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" },
-          { "key": "Accept", "value": "application/json" }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"title\": \"First Post\",\n  \"content\": \"This is the content\",\n  \"category_id\": 1,\n  \"tag_ids\": [1, 2]\n}"
+      "name": "👥 User Management",
+      "description": "User CRUD operations (Admin only)",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/v1/users",
+            "description": "Retrieve all users (admin only)"
+          },
+          "response": []
         },
-        "url": "{{base_url}}/api/v1/posts"
-      }
-    },
-    {
-      "name": "Posts - Get All",
-      "request": {
-        "method": "GET",
-        "url": "{{base_url}}/api/v1/posts"
-      }
-    },
-    {
-      "name": "Posts - Get One",
-      "request": {
-        "method": "GET",
-        "url": "{{base_url}}/api/v1/posts/1"
-      }
-    },
-    {
-      "name": "Posts - Update",
-      "request": {
-        "method": "PUT",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" },
-          { "key": "Accept", "value": "application/json" }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"title\": \"Updated Post\",\n  \"content\": \"New content\",\n  \"tag_ids\": [3]\n}"
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "{{user_id}}"]
+            },
+            "description": "Get specific user by ID (admin only)"
+          },
+          "response": []
         },
-        "url": "{{base_url}}/api/v1/posts/1"
-      }
-    },
-    {
-      "name": "Posts - Delete",
-      "request": {
-        "method": "DELETE",
-        "url": "{{base_url}}/api/v1/posts/1"
-      }
-    },
-    {
-      "name": "Categories - Create (admin only)",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" },
-          { "key": "Accept", "value": "application/json" }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"name\": \"Tech\"\n}"
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Updated\",\n  \"email\": \"john.updated@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "{{user_id}}"]
+            },
+            "description": "Update user information (admin only)"
+          },
+          "response": []
         },
-        "url": "{{base_url}}/api/v1/categories"
-      }
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "users", "{{user_id}}"]
+            },
+            "description": "Delete user (admin only)"
+          },
+          "response": []
+        }
+      ]
     },
     {
-      "name": "Categories - Delete (admin only)",
-      "request": {
-        "method": "DELETE",
-        "url": "{{base_url}}/api/v1/categories/1"
-      }
-    },
-    {
-      "name": "Tags - Create (admin only)",
-      "request": {
-        "method": "POST",
-        "header": [
-          { "key": "Content-Type", "value": "application/json" },
-          { "key": "Accept", "value": "application/json" }
-        ],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n  \"name\": \"Golang\"\n}"
+      "name": "📝 Posts Management",
+      "description": "Post CRUD operations with advanced filtering, search, and pagination",
+      "item": [
+        {
+          "name": "Create Post",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Getting Started with Go Programming\",\n  \"content\": \"Go is a statically typed, compiled programming language designed at Google. It's known for its simplicity, efficiency, and excellent concurrency support. In this post, we'll explore the basics of Go programming and why it's become so popular for backend development.\",\n  \"category_id\": 1,\n  \"tag_ids\": [1, 2, 3]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/v1/posts",
+            "description": "Create a new blog post"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const response = pm.response.json();",
+                  "  if (response && response.id) {",
+                  "    pm.collectionVariables.set('post_id', response.id);",
+                  "    console.log('Post created with ID:', response.id);",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
         },
-        "url": "{{base_url}}/api/v1/tags"
+        {
+          "name": "Get All Posts (Basic)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/v1/posts",
+            "description": "Get all posts with default pagination"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Posts with Pagination",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/posts?page=1&limit=5",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "posts"],
+              "query": [
+                { "key": "page", "value": "1", "description": "Page number" },
+                { "key": "limit", "value": "5", "description": "Posts per page" }
+              ]
+            },
+            "description": "Get posts with custom pagination"
+          },
+          "response": []
+        },
+        {
+          "name": "Search Posts",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/posts?search=golang",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "posts"],
+              "query": [
+                { "key": "search", "value": "golang", "description": "Search term" }
+              ]
+            },
+            "description": "Search posts by title and content"
+          },
+          "response": []
+        },
+        {
+          "name": "Filter Posts by Category",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/posts?category={{category_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "posts"],
+              "query": [
+                { "key": "category", "value": "{{category_id}}", "description": "Category ID" }
+              ]
+            },
+            "description": "Filter posts by category"
+          },
+          "response": []
+        },
+        {
+          "name": "Filter Posts by Tags",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/posts?tag=1,2,3",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "posts"],
+              "query": [
+                { "key": "tag", "value": "1,2,3", "description": "Comma-separated tag IDs" }
+              ]
+            },
+            "description": "Filter posts by multiple tags"
+          },
+          "response": []
+        },
+        {
+          "name": "Advanced Search & Filter",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/posts?search=api&category=1&tag=1,2&page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "posts"],
+              "query": [
+                { "key": "search", "value": "api", "description": "Search term" },
+                { "key": "category", "value": "1", "description": "Category ID" },
+                { "key": "tag", "value": "1,2", "description": "Tag IDs" },
+                { "key": "page", "value": "1", "description": "Page number" },
+                { "key": "limit", "value": "10", "description": "Posts per page" }
+              ]
+            },
+            "description": "Combined search, filter, and pagination"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Post by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/posts/{{post_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "posts", "{{post_id}}"]
+            },
+            "description": "Get specific post by ID"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Post",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated: Advanced Go Programming Techniques\",\n  \"content\": \"Updated content about advanced Go programming techniques including goroutines, channels, and interfaces. This comprehensive guide covers everything you need to know about building scalable applications with Go.\",\n  \"category_id\": 2,\n  \"tag_ids\": [2, 4, 5]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/posts/{{post_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "posts", "{{post_id}}"]
+            },
+            "description": "Update post (author or admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Post",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/posts/{{post_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "posts", "{{post_id}}"]
+            },
+            "description": "Delete post (author or admin only)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🏷️ Categories Management",
+      "description": "Category CRUD operations (Admin only)",
+      "item": [
+        {
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/v1/categories",
+            "description": "Get all categories"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Category",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Technology\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/v1/categories",
+            "description": "Create new category (admin only)"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const response = pm.response.json();",
+                  "  if (response && response.id) {",
+                  "    pm.collectionVariables.set('category_id', response.id);",
+                  "    console.log('Category created with ID:', response.id);",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Create Multiple Categories",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Programming\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/v1/categories",
+            "description": "Create additional category for testing"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Category",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/categories/{{category_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "categories", "{{category_id}}"]
+            },
+            "description": "Delete category (admin only)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🏷️ Tags Management",
+      "description": "Tag CRUD operations (Admin only)",
+      "item": [
+        {
+          "name": "Get All Tags",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/v1/tags",
+            "description": "Get all tags"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Tag",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Golang\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/v1/tags",
+            "description": "Create new tag (admin only)"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const response = pm.response.json();",
+                  "  if (response && response.id) {",
+                  "    pm.collectionVariables.set('tag_id', response.id);",
+                  "    console.log('Tag created with ID:', response.id);",
+                  "  }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Create Multiple Tags",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"API\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/v1/tags",
+            "description": "Create additional tag for testing"
+          },
+          "response": []
+        },
+        {
+          "name": "Create More Tags",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Backend\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{base_url}}/api/v1/tags",
+            "description": "Create more tags for comprehensive testing"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Tag",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/tags/{{tag_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "tags", "{{tag_id}}"]
+            },
+            "description": "Delete tag (admin only)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🧪 Test Scenarios",
+      "description": "Comprehensive test scenarios for API validation",
+      "item": [
+        {
+          "name": "Complete Workflow Test",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": "{{base_url}}/api/v1/posts?search=test&page=1&limit=5",
+            "description": "Test complete workflow with search and pagination"
+          },
+          "response": []
+        },
+        {
+          "name": "Error Handling - Invalid Token",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer invalid_token_here" }
+            ],
+            "url": "{{base_url}}/api/v1/me",
+            "description": "Test error handling with invalid JWT token"
+          },
+          "response": []
+        },
+        {
+          "name": "Error Handling - Missing Auth",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/api/v1/users",
+            "description": "Test error handling without authorization header"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global pre-request script",
+          "console.log('Making request to:', pm.request.url);"
+        ]
       }
     },
     {
-      "name": "Tags - Delete (admin only)",
-      "request": {
-        "method": "DELETE",
-        "url": "{{base_url}}/api/v1/tags/1"
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test script",
+          "pm.test('Response time is less than 5000ms', function () {",
+          "  pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});",
+          "",
+          "pm.test('Response has proper content type', function () {",
+          "  if (pm.response.headers.get('Content-Type')) {",
+          "    pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",
+          "  }",
+          "});"
+        ]
       }
     }
   ]
